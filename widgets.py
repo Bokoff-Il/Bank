@@ -2,6 +2,7 @@ import tkinter
 from tkinter import Menu,Frame, Label, Entry, LabelFrame, Button
 from tkinter import messagebox
 from tkinter import StringVar
+import json
 import settings
 
 
@@ -60,13 +61,14 @@ class InfoLabel(Label):
 
 
 class InputButton(Button):
-   def __init__(self,root, text, command):
+    def __init__(self,root, text, command):
        Button.__init__(self,root)
        self['text']=text
        self['font']=settings.TEXT_FONT
        self['command'] = command
-       self.pack(pady=5)
 
+    def pack_button(self):
+        self.pack(pady=5)
 
 class InputFrame(BaseFrame):
     def __init__(self, root, text, var):
@@ -93,7 +95,8 @@ class AboutBankFrame(BaseFrame):
 class AddPersonFrame(BaseFrame):
     def __init__(self, root):
         BaseFrame.__init__(self, root)
-        HeadLabel(self, 'Добавить клиента').pack()
+        self.head=HeadLabel(self, 'Добавить клиента')
+
 
         self.name=StringVar()
         self.surname = StringVar()
@@ -102,7 +105,6 @@ class AddPersonFrame(BaseFrame):
         self.phone = StringVar()
 
         self.fr=LabelFrame(self)
-
 
         conf=(
             ('Имя: ',  self.name),
@@ -116,24 +118,73 @@ class AddPersonFrame(BaseFrame):
         for frame in self.list_frame:
             frame.pack_frame()
 
-        self.fr.pack(anchor='w',fill='x')
-        InputButton(self, 'Добавить', command=self.get_input_data)
+        self.but=InputButton(self, 'Добавить', command=self.get_input_data)
+
+
+    def pack_frame(self):
+        self.head.pack()
+        self.fr.pack(anchor='w', fill='x')
+        self.but.pack_button()
+        self.pack(padx=20, pady=20, fill='both',expand="YES")
 
     def get_input_data(self):
-        name=self.name.get()
-        surname=self.surname.get()
-        date_birthday=self.date_birthday.get()
-        email=self.email.get()
-        phone=self.phone.get()
+        data={
+            'name':self.name.get(),
+            'surname':self.surname.get(),
+            'date_birthday':self.date_birthday.get(),
+            'email':self.email.get(),
+            'phone':self.phone.get()
+        }
 
         for frame in self.list_frame:
             frame.clean()
         messagebox.showinfo('Успех', 'Пользователь успешно добавлен!')
-        print(name,surname,date_birthday,email,phone)
+        return json.dumps(data)
 
 
 
+class ChangePersonFrame(AddPersonFrame):
+    def __init__(self, root):
+        AddPersonFrame.__init__(self, root)
 
+        self.fr_old = LabelFrame(self,text='Старые')
+        self.fr['text'] = 'Новые'
 
+        self.old_name = StringVar()
+        self.old_surname = StringVar()
+        self.id = StringVar()
+
+        conf = (
+            ('Имя: ', self.old_name),
+            ('Фамилия: ', self.old_surname),
+            ('Идентификатор: ', self.id),
+        )
+        self.list_frame = [InputFrame(self.fr_old, text, var) for (text, var) in conf]
+
+        for frame in self.list_frame:
+            frame.pack_frame()
+        self.but_search = InputButton(self, 'Поиск', command=self.search_client())
+        self.head=HeadLabel(self, 'Изменить данные клиента')
+        self.but=InputButton(self, 'Изменить', command=self.change_input_data)
+
+    def pack_frame(self):
+        self.head.pack()
+        self.fr_old.pack(anchor='w', fill='x',pady=10)
+        self.but_search.pack_button()
+        self.fr.pack(anchor='w', fill='x')
+        self.but.pack_button()
+        self.pack(padx=20, pady=20, fill='both', expand="YES")
+
+    def search_client(self):
+        data = {
+            'name': self.old_name.get(),
+            'surname': self.old_surname.get(),
+            'id': self.id.get(),
+        }
+        return data
+
+    def change_input_data(self):
+        new_data=self.get_input_data()
+        print(new_data)
 
 
