@@ -1,19 +1,35 @@
 import tkinter
-from tkinter import Menu,Frame, Label, Entry, LabelFrame, Button
+from tkinter import Menu,Frame, Label, Entry, LabelFrame, Button, Tk
 from tkinter import messagebox
 from tkinter import StringVar
 import json
 import settings
 
 
+class Root(Tk):
+    def __init__(self):
+        Tk.__init__(self)
+        self.title(settings.NAME)
+        self.geometry(settings.GEOMETRY)
+        MainMenu(self)
+        self.frame=AboutBankFrame(self)
+
+    def pack_window(self):
+        self.frame.pack_frame()
+
+    def update_window(self):
+        self.update()
+
+
 class MainMenu(Menu):
     def __init__(self,root):
         Menu.__init__(self,root)
+
         person_menu=Menu(self,tearoff=0)
         person_menu.add_command(label='Все клиенты')
-        person_menu.add_command(label='Добавить клиента')
-        person_menu.add_command(label='Изменить данные клиента')
-        person_menu.add_command(label='Удалить клиента')
+        person_menu.add_command(label='Добавить клиента', command=lambda: self.add_client(root))
+        person_menu.add_command(label='Изменить данные клиента',command=lambda: self.change_data_client(root))
+        person_menu.add_command(label='Удалить клиента',command=lambda: self.delete_client(root))
 
         account_menu=Menu(self, tearoff=0)
         account_menu.add_command(label='Все счета')
@@ -31,12 +47,35 @@ class MainMenu(Menu):
         transaction_menu.add_command(label='Снять деньги со счета')
         transaction_menu.add_command(label='Перевод между счетами')
 
+        self.add_command(label='Главная', command=lambda: self.about_bank(root))
         self.add_cascade(label='Клиенты',menu=person_menu)
         self.add_cascade(label='Счета', menu=account_menu)
         self.add_cascade(label='Карты', menu=card_menu)
         self.add_cascade(label='Операции', menu=transaction_menu)
-
         root.config(menu=self)
+
+    def add_client(self,root):
+        root.frame.destroy()
+        root.frame=AddPersonFrame(root)
+        root.pack_window()
+
+    def change_data_client(self,root):
+        root.frame.destroy()
+        root.frame=ChangePersonFrame(root)
+        root.pack_window()
+
+    def delete_client(self,root):
+        root.frame.destroy()
+        root.frame=DeletePersonFrame(root)
+        root.pack_window()
+
+    def about_bank(self,root):
+        root.frame.destroy()
+        root.frame=AboutBankFrame(root)
+        root.pack_window()
+
+
+
 
 
 class BaseFrame(Frame):
@@ -69,6 +108,7 @@ class InputButton(Button):
 
     def pack_button(self):
         self.pack(pady=5)
+
 
 class InputFrame(BaseFrame):
     def __init__(self, root, text, var):
@@ -142,7 +182,6 @@ class AddPersonFrame(BaseFrame):
         return json.dumps(data)
 
 
-
 class ChangePersonFrame(AddPersonFrame):
     def __init__(self, root):
         AddPersonFrame.__init__(self, root)
@@ -187,4 +226,40 @@ class ChangePersonFrame(AddPersonFrame):
         new_data=self.get_input_data()
         print(new_data)
 
+
+class DeletePersonFrame(AddPersonFrame):
+    def __init__(self, root):
+        AddPersonFrame.__init__(self, root)
+
+        self.fr_del=LabelFrame(self)
+        self.old_name = StringVar()
+        self.old_surname = StringVar()
+        self.id = StringVar()
+
+        conf = (
+            ('Имя: ', self.old_name),
+            ('Фамилия: ', self.old_surname),
+            ('Идентификатор: ', self.id),
+        )
+        self.list_frame = [InputFrame(self.fr_del, text, var) for (text, var) in conf]
+
+        for frame in self.list_frame:
+            frame.pack_frame()
+
+        self.head=HeadLabel(self, 'Удалить клиента')
+        self.but=InputButton(self, 'Удалить', command=self.delete_client)
+
+    def pack_frame(self):
+        self.head.pack()
+        self.fr_del.pack(anchor='w', fill='x')
+        self.but.pack_button()
+        self.pack(padx=20, pady=20, fill='both', expand="YES")
+
+    def delete_client(self):
+        data = {
+            'name': self.old_name.get(),
+            'surname': self.old_surname.get(),
+            'id': self.id.get(),
+        }
+        return data
 
