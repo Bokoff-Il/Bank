@@ -102,13 +102,15 @@ class AddPersonFrame(BaseFrame):
 
         self.fr=LabelFrame(self)
 
-        self.list_frame=[
-            InputFrame(self.fr,'Имя: ',self.name),
-            InputFrame(self.fr, 'Фамилия: ', self.surname),
-            InputFrame(self.fr, 'Дата рождения: ', self.date_birthday),
-            InputFrame(self.fr, 'Email: ', self.email),
-            InputFrame(self.fr, 'Телефон: ', self.phone)
-        ]
+
+        conf=(
+            ('Имя: ', self.name),
+            ('Фамилия: ', self.surname),
+            ('Дата рождения: ', self.date_birthday),
+            ('Email: ', self.email),
+            ('Телефон: ', self.phone),
+        )
+        self.list_frame = [InputFrame(self.fr, text, var) for (text, var) in conf]
 
         for frame in self.list_frame:
             frame.pack_frame()
