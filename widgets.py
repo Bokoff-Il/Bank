@@ -1,5 +1,5 @@
 import tkinter
-from tkinter import Menu,Frame, Label, Entry, LabelFrame, Button, Tk
+from tkinter import Menu,Frame, Label, Entry, LabelFrame, Button, Tk, ttk
 from tkinter import messagebox
 from tkinter import StringVar
 import json
@@ -33,14 +33,13 @@ class MainMenu(Menu):
 
         account_menu=Menu(self, tearoff=0)
         account_menu.add_command(label='Все счета')
-        account_menu.add_command(label='Добавить счет')
-        account_menu.add_command(label='Удалить счет')
-        account_menu.add_command(label='Блокировать счет')
+        account_menu.add_command(label='Добавить счет', command=lambda: self.add_account(root))
+        account_menu.add_command(label='Блокировать счет',command=lambda: self.block_account(root))
 
         card_menu = Menu(self, tearoff=0)
         card_menu.add_command(label='Все карты')
         card_menu.add_command(label='Выпустить карту')
-        account_menu.add_command(label='Блокировать карту')
+        card_menu.add_command(label='Блокировать карту')
 
         transaction_menu = Menu(self, tearoff=0)
         transaction_menu.add_command(label='Пополнить счет')
@@ -69,14 +68,20 @@ class MainMenu(Menu):
         root.frame=DeletePersonFrame(root)
         root.pack_window()
 
+    def add_account(self,root):
+        root.frame.destroy()
+        root.frame=AddAccountFrame(root)
+        root.pack_window()
+
+    def block_account(self,root):
+        root.frame.destroy()
+        root.frame=BlockAccountFrame(root)
+        root.pack_window()
+
     def about_bank(self,root):
         root.frame.destroy()
         root.frame=AboutBankFrame(root)
         root.pack_window()
-
-
-
-
 
 class BaseFrame(Frame):
     def __init__(self, root):
@@ -126,6 +131,23 @@ class InputFrame(BaseFrame):
         self.input.delete(0,tkinter.END)
 
 
+class ComboboxFrame(BaseFrame):
+    def __init__(self, root, text_label, list):
+        BaseFrame.__init__(self, root)
+        self.label=InfoLabel(self, text_label)
+        self.combobox=ttk.Combobox(self, font=settings.TEXT_FONT, values=list)
+        self.combobox.current(0)
+
+    def pack_frame(self):
+        self.label.pack(side='left')
+        self.combobox.pack(side='left',expand='yes',fill='x')
+        self.pack(anchor='w', fill='x')
+        return self
+
+    def get_combobox_value(self):
+        return self.combobox.current(), self.combobox.get()
+
+
 class AboutBankFrame(BaseFrame):
     def __init__(self, root):
         BaseFrame.__init__(self,root)
@@ -136,7 +158,6 @@ class AddPersonFrame(BaseFrame):
     def __init__(self, root):
         BaseFrame.__init__(self, root)
         self.head=HeadLabel(self, 'Добавить клиента')
-
 
         self.name=StringVar()
         self.surname = StringVar()
@@ -154,20 +175,18 @@ class AddPersonFrame(BaseFrame):
             ('Телефон: ', self.phone),
         )
         self.list_frame = [InputFrame(self.fr, text, var) for (text,var) in conf]
-
         for frame in self.list_frame:
             frame.pack_frame()
-
-        self.but=InputButton(self, 'Добавить', command=self.get_input_data)
-
+        self.but=InputButton(self, 'Добавить', command=self.get_data)
 
     def pack_frame(self):
         self.head.pack()
         self.fr.pack(anchor='w', fill='x')
+
         self.but.pack_button()
         self.pack(padx=20, pady=20, fill='both',expand="YES")
 
-    def get_input_data(self):
+    def get_data(self):
         data={
             'name':self.name.get(),
             'surname':self.surname.get(),
@@ -223,22 +242,22 @@ class ChangePersonFrame(AddPersonFrame):
         return data
 
     def change_input_data(self):
-        new_data=self.get_input_data()
+        new_data=self.get_data()
         print(new_data)
 
 
-class DeletePersonFrame(AddPersonFrame):
+class DeletePersonFrame(BaseFrame):
     def __init__(self, root):
-        AddPersonFrame.__init__(self, root)
+        BaseFrame.__init__(self, root)
 
         self.fr_del=LabelFrame(self)
-        self.old_name = StringVar()
-        self.old_surname = StringVar()
+        self.name = StringVar()
+        self.surname = StringVar()
         self.id = StringVar()
 
         conf = (
-            ('Имя: ', self.old_name),
-            ('Фамилия: ', self.old_surname),
+            ('Имя: ', self.name),
+            ('Фамилия: ', self.surname),
             ('Идентификатор: ', self.id),
         )
         self.list_frame = [InputFrame(self.fr_del, text, var) for (text, var) in conf]
@@ -257,9 +276,79 @@ class DeletePersonFrame(AddPersonFrame):
 
     def delete_client(self):
         data = {
-            'name': self.old_name.get(),
-            'surname': self.old_surname.get(),
+            'name': self.name.get(),
+            'surname': self.surname.get(),
             'id': self.id.get(),
         }
         return data
+
+
+class AddAccountFrame(BaseFrame):
+    def __init__(self, root):
+        BaseFrame.__init__(self, root)
+        self.head=HeadLabel(self, 'Добавить cчет')
+
+        self.name=StringVar()
+        self.surname = StringVar()
+        self.id = StringVar()
+
+        self.fr=LabelFrame(self)
+
+        conf=(
+            ('Имя: ',  self.name),
+            ('Фамилия: ', self.surname),
+            ('Идентификатор: ', self.id),
+        )
+        self.list_frame = [InputFrame(self.fr, text, var) for (text,var) in conf]
+        for frame in self.list_frame:
+            frame.pack_frame()
+        self.combo_frame=ComboboxFrame(self.fr,'Тип счета: ', self.get_account_type())
+        self.but=InputButton(self, 'Создать cчет', command=self.get_data())
+
+    def pack_frame(self):
+        self.head.pack()
+        self.fr.pack(anchor='w', fill='x')
+        self.combo_frame.pack_frame()
+        self.but.pack_button()
+        self.pack(padx=20, pady=20, fill='both',expand="YES")
+
+    def get_data(self):
+        data={
+            'name':self.name.get(),
+            'surname':self.surname.get(),
+            'id':self.id
+        }
+
+    def get_account_type(self):
+        return ['type1','type2','type3']
+
+
+class BlockAccountFrame(BaseFrame):
+    def __init__(self, root):
+        BaseFrame.__init__(self, root)
+        self.head = HeadLabel(self, 'Заблокировать счет')
+
+        self.number = StringVar()
+
+        self.fr = LabelFrame(self)
+
+        conf = (
+            ('Номер счета: ', self.number),
+        )
+        self.list_frame = [InputFrame(self.fr, text, var) for (text, var) in conf]
+        for frame in self.list_frame:
+            frame.pack_frame()
+
+        self.but = InputButton(self, 'Блокировать cчет', command=self.block_account())
+
+    def pack_frame(self):
+        self.head.pack()
+        self.fr.pack(anchor='w', fill='x')
+        self.but.pack_button()
+        self.pack(padx=20, pady=20, fill='both', expand="YES")
+
+    def block_account(self):
+        data = {
+            'number': self.number.get(),
+        }
 
