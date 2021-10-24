@@ -11,6 +11,7 @@ class MainMenu(Menu):
         person_menu=Menu(self,tearoff=0)
         person_menu.add_command(label='Все клиенты')
         person_menu.add_command(label='Добавить клиента')
+        person_menu.add_command(label='Изменить данные клиента')
         person_menu.add_command(label='Удалить клиента')
 
         account_menu=Menu(self, tearoff=0)
@@ -92,7 +93,7 @@ class AboutBankFrame(BaseFrame):
 class AddPersonFrame(BaseFrame):
     def __init__(self, root):
         BaseFrame.__init__(self, root)
-        HeadLabel(self, 'Добавить пользователя').pack()
+        HeadLabel(self, 'Добавить клиента').pack()
 
         self.name=StringVar()
         self.surname = StringVar()
@@ -104,13 +105,13 @@ class AddPersonFrame(BaseFrame):
 
 
         conf=(
-            ('Имя: ', self.name),
+            ('Имя: ',  self.name),
             ('Фамилия: ', self.surname),
-            ('Дата рождения: ', self.date_birthday),
+            ('Дата рождения(ДД.ММ.ГГГГ): ', self.date_birthday),
             ('Email: ', self.email),
             ('Телефон: ', self.phone),
         )
-        self.list_frame = [InputFrame(self.fr, text, var) for (text, var) in conf]
+        self.list_frame = [InputFrame(self.fr, text, var) for (text,var) in conf]
 
         for frame in self.list_frame:
             frame.pack_frame()
