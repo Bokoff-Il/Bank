@@ -4,7 +4,7 @@ from widgets import MainMenu
 
 root = Tk()
 root.title(settings.NAME)
-root.geometry('800x600')
+root.geometry(settings.GEOMETRY)
 MainMenu(root)
 
 
